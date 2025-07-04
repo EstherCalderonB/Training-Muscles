@@ -8,20 +8,20 @@ This project analyzes over 1,000 categorized gym exercises to uncover which musc
 
 ---
 
-## 📊 What’s Inside
+##  What’s Inside
 
-- 📥 **Data Source:** Custom Excel dataset with exercise names, difficulty levels, equipment used, and muscle targeting (prime, secondary, tertiary).
-- 🧹 **Data Cleaning:** Parsed multiple muscle columns into tidy rows using `separate_rows()` in R.
-- 📈 **Visualizations:**
+-  **Data Source:** Custom Excel dataset with exercise names, difficulty levels, equipment used, and muscle targeting (prime, secondary, tertiary).
+-  **Data Cleaning:** Parsed multiple muscle columns into tidy rows using `separate_rows()` in R.
+-  **Visualizations:**
   - Top 15 most frequently trained muscles
   - Top 5 most neglected muscles
   - Top 4 muscles trained within each body region (faceted chart)
-- 📋 **Interactive Summary Table** built with `DT::datatable()`
-- 🧠 **Training Recommendations** based on actual data patterns
+-  **Interactive Summary Table** built with `DT::datatable()`
+-  **Training Recommendations** based on actual data patterns
 
 ---
 
-## 🧰 Tools Used
+##  Tools Used
 
 - **R**: Data cleaning, transformation, and visualization
 - **Tidyverse**: Data wrangling and summaries
@@ -33,7 +33,7 @@ This project analyzes over 1,000 categorized gym exercises to uncover which musc
 
 ---
 
-## 💡 Key Findings
+##  Key Findings
 
 - **Glutes, abs, and quads** are the most frequently trained muscles
 - **Stabilizers** like the transverse abdominis, serratus anterior, and posterior delts are often neglected
@@ -42,4 +42,4 @@ This project analyzes over 1,000 categorized gym exercises to uncover which musc
 
 ---
 
-## 📦 Folder Structure
+## Folder Structure
