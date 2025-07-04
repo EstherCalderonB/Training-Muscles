@@ -1,0 +1,268 @@
+---
+title: "Train Smart, Train Even: What Gym Exercises Reveal About Muscle Imbalances"
+author: "Esther Calderon"
+format: 
+  html:
+    code-tools: false
+    echo: false
+    warning: false
+    message: false
+    fig-width: 14.5
+execute: 
+  keep-md: true
+---
+
+In the pursuit of strength, aesthetics, or athletic performance, most people rely on exercise programs built from online workouts, personal trainers, or general fitness trends. But how balanced are these programs really? Using a structured dataset of over 1,000 categorized exercises—including their primary, secondary, and tertiary muscles—this study investigates which muscle groups are most frequently targeted, and more importantly, which are consistently neglected.
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(readxl)
+library(tidyverse)
+library(tidyr)
+library(DT)
+
+
+file_path <- "C:/Users/19864/OneDrive/Desktop/DS350/DS350_SP25_Calderon_Esth/week_11/fitness_dataset.xlsx"
+
+exercise_data <- read_excel(file_path)
+
+
+clean_exercise <- exercise_data %>%
+  select(
+    Exercise,
+    `Target Muscle Group`,
+    `Prime Mover Muscle`,
+    `Secondary Muscle`,
+    `Tertiary Muscle`,
+    `Difficulty Level`,
+    `Primary Equipment`
+  )
+
+```
+
+A full count of all 42 muscles in the dataset reveals the concentration of volume in a few muscles, while others appear in fewer than 30 exercises.
+
+```{r}
+#| message: false
+#| warning: false
+
+tidy_muscles <- clean_exercise %>%
+  pivot_longer(cols = c(`Prime Mover Muscle`, `Secondary Muscle`, `Tertiary Muscle`),
+               names_to = "Muscle_Type",
+               values_to = "Muscle") %>%
+  separate_rows(Muscle, sep = ",") %>%
+  mutate(Muscle = str_trim(Muscle)) %>%
+  filter(!is.na(Muscle) & Muscle != "")
+
+muscle_summary <- tidy_muscles %>%
+  count(Muscle, sort = TRUE) %>%
+  filter(!is.na(Muscle) & Muscle != "")
+
+
+datatable(
+  muscle_summary,
+  options = list(pageLength = 10, autoWidth = TRUE),
+  rownames = FALSE,
+  colnames = c("Muscle", "Exercise Count"),
+  class = "stripe hover cell-border order-column"
+)
+
+
+
+
+```
+
+##  Are We Training the Whole Body Evenly?
+
+To better understand balance across the entire body, we grouped exercises by Target Muscle Group (e.g., Back, Glutes, Shoulders, Shins). The results show large imbalances:
+
+-    Regions like Abdominals, Glutes, and Quadriceps dominate programming.
+
+-   Other zones such as Shins, Trapezius, and Calves are sparsely trained.
+
+-   Within each region, only a few muscles tend to receive most of the attention (e.g., quadriceps \> vastus medialis, shoulders \> anterior deltoid only).
+
+```{r}
+#| message: false
+#| warning: false
+library(tidytext)
+
+dark_blues_grays <- c(
+  "#1F77B4",  # deep blue
+  "#2E86C1",  # vivid blue
+  "#21618C",  # navy
+  "#154360",  # midnight blue
+  "#0B3C5D",  # marine blue
+  "#5D6D7E",  # medium charcoal gray
+  "#566573",  # gray-blue slate
+  "#34495E",  # deep steel
+  "#2C3E50",  # dark blue-gray
+  "#212F3C",  # soot blackish gray
+  "#1C2833",  # near black
+  "#2C2F33",  # muted storm gray
+  "#37474F",  # blue charcoal
+  "#455A64",  # iron blue-gray
+  "#263238",  # shadow gray
+  "#0A0A0A"   # true soot black
+)
+
+
+library(tidytext)
+
+tidy_muscles %>%
+  count(`Target Muscle Group`, Muscle, sort = TRUE) %>%
+  group_by(`Target Muscle Group`) %>%
+  mutate(rank = dense_rank(desc(n))) %>%
+  filter(rank <= 4) %>%
+  ungroup() %>%
+  ggplot(aes(x = reorder_within(Muscle, n, `Target Muscle Group`), y = n, fill = `Target Muscle Group`)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  facet_wrap(~ `Target Muscle Group`, scales = "free_y") +
+  scale_x_reordered() +
+  scale_fill_manual(values = dark_blues_grays) +
+  labs(
+    title = "Top Muscles Trained Within Each Body Region",
+    x = "Muscle",
+    y = "Exercise Count"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+```
+
+## **Which Muscles Are Trained the Most?**
+
+Unsurprisingly, the data shows a strong bias toward larger, popular muscle groups. The gluteus maximus was the most frequently trained muscle across all exercises, appearing in over 1,600 entries. It was followed closely by the quadriceps femoris, rectus abdominis, and biceps femoris.
+
+This reflects the cultural emphasis on lower-body and core-focused training—especially for compound movements like squats, lunges, and abdominal circuits.
+
+```{r}
+#| message: false
+#| warning: false
+tidy_muscles %>%
+  count(Muscle, sort = TRUE) %>%
+  slice_max(n, n = 15) %>%
+  ggplot(aes(x = reorder(Muscle, n), y = n)) +
+  geom_col(fill = "black") +
+  coord_flip() +
+  labs(
+    title = "Top 15 Most Frequently Targeted Muscles",
+    x = "Muscle",
+    y = "Number of Exercises"
+  ) +
+   theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+
+```
+
+## Most Neglected Muscles
+
+On the other end of the spectrum, several small but functionally important muscles were severely underrepresented. Muscles like the subscapularis, vastus medialis, transverse abdominis, and supraspinatus appeared in fewer than 10 exercises.
+
+These muscles are often critical for stability, joint health, and posture—particularly in the shoulders, hips, and core. Their neglect may contribute to performance plateaus or injury risk.
+
+```{r}
+#| message: false
+#| warning: false
+tidy_muscles %>%
+  count(Muscle, sort = TRUE) %>%
+  filter(n <= 15) %>%
+  ggplot(aes(x = reorder(Muscle, n), y = n)) +
+  geom_col(fill = "black") +
+  coord_flip() +
+  labs(
+    title = "Most Neglected Muscles in Exercise Programming",
+    x = "Muscle",
+    y = "Number of Exercises"
+  ) +
+   theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+```
+
+##  How to Train Smarter and More Evenly
+
+After analyzing over 1,000 exercises across all major muscle groups, the patterns are clear: some muscles get trained constantly, while others are barely touched.
+
+It’s not just a matter of aesthetics — neglecting key muscles can lead to imbalances, plateaus, and even injury. So here’s how to take what the data is telling us and actually apply it to your training:
+
+------------------------------------------------------------------------
+
+###  1. Don’t Just Push — Pull More
+
+A lot of gym programs are push-heavy. Think bench presses, pushups, shoulder presses — all great moves, but they leave muscles like your **rear delts**, **rhomboids**, and **mid-back** undertrained.
+
+**Try this:**\
+For every pressing movement, add a pull. Cable rows, reverse flys, face pulls — simple swaps that keep your shoulders healthy and your posture strong.
+
+------------------------------------------------------------------------
+
+### Show Love to the Stabilizers
+
+Muscles like the transverse abdominis, serratus anterior, and rotator cuff are like the backstage crew — you don’t see them, but they’re holding everything together.
+
+**Try this:**\
+Add a few minutes of deep core or scapular work at the end of your sessions. Dead bugs, bird dogs, banded shoulder rotations — boring? Maybe. Effective? Absolutely.
+
+------------------------------------------------------------------------
+
+### Rethink Leg Day
+
+Glutes and quads get plenty of love — but what about your VMO, adductors, and tibialis anterior? These often-neglected muscles are crucial for knee tracking and ankle stability.
+
+**Try this:**\
+Throw in some tib raises, Cossack squats, or Copenhagen planks. You'll feel the difference — and so will your knees.
+
+------------------------------------------------------------------------
+
+### Rotate Accessories More Often
+
+Most of us default to the same handful of exercises over and over. That’s how certain muscles keep getting overtrained, while others are left behind.
+
+**Try this:**\
+Every 3–4 weeks, change up your accessory lifts. Target the muscles you usually avoid. Think lateral movements, hip internal/external rotation, and anti-rotation core work.
+
+------------------------------------------------------------------------
+
+### Track What You’re Actually Training
+
+Here’s the real takeaway: most people have no idea which muscles they’re *actually* training each week. Your split might say “push/pull/legs,” but are you consistently skipping rear delts, hamstrings, or core stabilizers?
+
+**Try this:**\
+Log your exercises by muscle group and do a monthly review. If you spot gaps, adjust. Your future self (and joints) will thank you.
+
+------------------------------------------------------------------------
+
+Training smart doesn’t mean you need to overhaul everything. It just means **paying attention**. The muscles that don’t get the spotlight are often the ones keeping you healthy, mobile, and performing at your best.
+
+So next time you're in the gym, ask yourself:\
+\> ❝ Am I training everything — or just the stuff I see in the mirror? ❞
+
+## Behind the Data
+
+This analysis was built on a structured dataset of over 1,000 exercises, each annotated with rich information like exercise name, difficulty level, equipment used, and—most importantly—the muscles targeted. The dataset included three separate columns for prime mover, secondary, and tertiary muscles, along with a general `"Target Muscle Group"` for broader classification (e.g., "Glutes", "Back", "Shoulders").
+
+To analyze the data, I used R and several core packages including `tidyverse`, `readxl`, and `tidytext`. First, I cleaned the data and transformed the multi-muscle columns using `separate_rows()`—a key step that allowed me to break apart cells like `"Glutes, Hamstrings"` into individual rows for accurate counting.
+
+Next, I counted how often each muscle appeared, both overall and within its target region. This helped me surface important patterns:
+
+-    Some muscles like the gluteus maximus, rectus abdominis, and quadriceps appeared in hundreds of exercises
+
+-    Others like the serratus anterior, transverse abdominis, and posterior deltoid were barely represented.
+
+-   Finally, I visualized the data using `ggplot2`, grouping the top 4 muscles in each region and highlighting the 5 most neglected muscles overall. These visuals directly informed my final recommendations on how to improve balance and reduce blind spots in common training programs.
+
+So if you’re wondering how this blog post knows you might be overtraining your quads and skipping your deep core — now you know.
